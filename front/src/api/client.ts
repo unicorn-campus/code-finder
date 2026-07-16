@@ -11,8 +11,11 @@ import type { SearchRequest, SseCallbacks, CodeExample, Source, SearchAnswer } f
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
-/** 기본 타임아웃(ms) */
-const DEFAULT_TIMEOUT = 30_000
+/**
+ * 요청 타임아웃(ms). 기본 30초.
+ * 실 MAS 백엔드는 팬아웃·리랭킹·합성으로 응답이 길 수 있어 VITE_REQUEST_TIMEOUT_MS로 override 가능.
+ */
+const DEFAULT_TIMEOUT = Number(import.meta.env.VITE_REQUEST_TIMEOUT_MS) || 30_000
 
 /**
  * SSE 이벤트 데이터를 파싱하고 콜백으로 분배.

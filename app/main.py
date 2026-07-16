@@ -53,6 +53,22 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="code-finder 통합 검색 API", version="1.0.0", lifespan=lifespan)
 
+# CORS — 프론트엔드(front/) dev 서버 등 별도 오리진의 브라우저 호출 허용.
+# 기본값은 Vite dev 오리진, CORS_ALLOW_ORIGINS(콤마 구분)로 override 가능.
+_cors_origins = [
+    o.strip()
+    for o in os.getenv(
+        "CORS_ALLOW_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+    ).split(",")
+    if o.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 def _sse(event: str, data: dict) -> dict:
     """SSE 이벤트 포맷(data는 최종 스키마 필드명 사용)."""
