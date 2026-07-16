@@ -90,13 +90,13 @@ def extract_signature(segment: str) -> str:
     depth = 0
     out: list[str] = []
     for ch in header_region:
+        if ch == ":" and depth == 0:
+            break  # 헤더 종결 콜론은 시그니처에서 제외
         out.append(ch)
         if ch in "([{":
             depth += 1
         elif ch in ")]}":
             depth = max(0, depth - 1)
-        elif ch == ":" and depth == 0:
-            break
     sig = "".join(out).strip()
     return " ".join(sig.split())  # 개행·연속공백 정규화
 

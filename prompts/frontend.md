@@ -14,11 +14,12 @@ Vue 3(Composition API)·Vite 기반 SPA 구축과 Google 검색 수준의 미니
   백엔드 검색 파이프라인(GraphRAG·RAG·웹·유튜브 + 멀티 LLM)은 별도 개발 중이며, 학습자가 질문을  
   던지고 결과를 빠르게 스캔하는 단일 화면 UX가 없음. Google 검색의 단순함이 기준점임.
 - 결과물 독자: 프론트엔드 개발자(미니멀), 서비스 기획자(브릿지), QA 엔지니어(체커), 오케스트레이터(클로니)
-- 후속 연계: 백엔드 검색 API(`prompts/backend.md`에서 정의) 계약을 소비함.  
-  계약 미확정 부분은 본 프롬프트 [예시]의 잠정 스펙과 mock으로 개발 후 확정 시 교체함
+- 후속 연계: 백엔드 검색 API(`prompts/backend.md`)의 요청·SSE·최종 스키마를 정본 계약으로 소비함.  
+  [예시]는 그 계약의 프론트 소비 형태이며, 백엔드 미기동 시 동일 스키마로 mock 후 실계약과 대조·교체함
 
 [입력]
-- 백엔드 API 계약: `prompts/backend.md` (미완 시 본 프롬프트 [예시]의 잠정 API 스펙을 임시 계약으로 사용)
+- 백엔드 API 계약(정본): `prompts/backend.md` — 요청 스키마·SSE 이벤트·최종 Structured Output 스키마  
+  백엔드 미기동 시 동일 스키마로 mock 사용(스키마 임의 변경 금지)
 - UX 기준: `AGENTS.md`의 서비스 기획자·프론트엔드 persona (Google-like 단순함, 핵심 요약 → 코드 → 출처 순)
 - 개발 가이드: `references/dev-prompt-guide_v2.md` §3.9, `references/prompt-guide.md` 8섹션 표준
 - 관련 교재(선택): `~/workspace/aistudy/agentic-ai/textbook/*.md` — 도메인 용어·예시 질문 확보용, 앞단 아젠다만 참조
@@ -34,13 +35,16 @@ Vue 3(Composition API)·Vite 기반 SPA 구축과 Google 검색 수준의 미니
     - 질문 입력 → 검색 요청 → 로딩/부분결과 → 통합 결과 카드 렌더 → 출처 이동
   - 화면 구성
     - 질문 입력 화면: 중앙 단일 검색창(Google-like), 예시 질문 칩, 엔터·버튼 검색,  
-      LLM 선택 드롭다운(Claude/OpenAI/Gemini, 백엔드 지원 시 노출)
-    - 결과 화면: 상단 질문 에코 → 핵심 요약 → 예제 코드(문법 하이라이트 + 복사 버튼) → 소스별 출처 카드
-    - 소스별 출처 카드: 소스 유형 배지(교재/코드/웹/영상), 관련도·신뢰도 표시, 원문·영상 링크
-    - 상태 처리: 로딩 스켈레톤, 부분결과 스트리밍(소스 도착 순 렌더), 빈 결과·에러·재시도 상태
+      LLM 선택 드롭다운(Claude/OpenAI/Gemini → 요청 `llm` 파라미터, 미선택 시 백엔드 자동 라우팅)
+    - 결과 화면: 상단 질문 에코 → 핵심 요약 → 예제 코드(문법 하이라이트 + 복사 버튼) → 소스별 출처 카드  
+      → 미도달 소스 안내(`missing_sources`)
+    - 소스별 출처 카드: 소스 유형 배지(교재/코드/웹/영상), 관련도·신뢰도(`score`) 표시, 원문·영상 링크(`ref`|`url`)
+    - 상태 처리: 로딩 스켈레톤, 부분결과 스트리밍(소스 도착 순 렌더), 빈 결과·에러·재시도,  
+      미도달 소스(`missing_sources`) 배지 표기
   - 백엔드 연동 [기준]
-    - 백엔드가 SSE 스트리밍 응답 → `fetch` 스트림/`EventSource`로 부분결과 순차 렌더
-    - 백엔드가 단발 JSON 응답 → 일반 `fetch`로 일괄 렌더
+    - 기본: 백엔드 SSE 계약(`summary`·`code`·`source`·`missing`·`done`) → `fetch` 스트림/`EventSource`로  
+      부분결과 순차 렌더, `done`의 최종 Structured Output으로 확정
+    - 폴백: mock·비스트리밍 환경은 단발 JSON(최종 스키마 동일)을 일반 `fetch`로 일괄 렌더
     - 선택 결과와 근거를 README에 기록
   - 기술적 요구사항
     - API base URL 등 config는 `.env`(`VITE_` 접두)에서 로드, Config와 소스 분리
@@ -82,16 +86,17 @@ Vue 3(Composition API)·Vite 기반 SPA 구축과 Google 검색 수준의 미니
   - 프로덕션 빌드(`vite build`) 성공 로그 확인
 
 [예시]
-(잠정 검색 API 계약 — `backend.md` 확정 전 임시 사용)
+(검색 API 계약 — 정본은 `prompts/backend.md`, 아래는 프론트 소비 형태)
 ```
-POST /api/search
-Request: {"query": "LangGraph에서 StateGraph 만드는 법", "llm": "claude"}
-Response(SSE, event별 부분결과):
-  event: summary  data: {"text": "StateGraph는 상태를 공유하는 그래프 실행 단위임 ..."}
-  event: code     data: {"lang": "python", "code": "def build_state_graph(...):", "source_chunk_id": "code_042"}
-  event: source   data: {"type": "textbook", "title": "...", "url": "...", "score": 0.82}
-  event: source   data: {"type": "youtube", "title": "...", "url": "...", "score": 0.71}
-  event: done     data: {}
+POST /search   # base URL은 VITE_API_BASE_URL
+Request: {"query": "LangGraph에서 StateGraph 만드는 법", "llm": "claude"}  # llm 선택, 미지정 시 백엔드 자동 라우팅
+Response(SSE, 부분결과 → done에 최종 Structured Output):
+  event: summary  data: {"summary": "StateGraph에 노드를 등록하고 State(Reducer)로 상태를 공유함 ..."}
+  event: code     data: {"lang": "python", "code": "graph = StateGraph(State)...", "explain": "State/Reducer로 상태 공유", "source": "examples/langgraph/state_graph.py#build_state_graph#12"}
+  event: source   data: {"type": "textbook", "ref": "ent_state_graph", "score": 0.91}
+  event: source   data: {"type": "youtube", "url": "https://youtu.be/...", "score": 0.65, "fetched_at": "2026-07-16T00:00:00Z"}
+  event: missing  data: {"missing_sources": ["youtube"]}
+  event: done     data: {"query":"...","summary":"...","code_examples":[...],"sources":[...],"missing_sources":[...],"used_models":{...}}
 ```
 (통합 결과 카드 렌더 순서)
 ```
@@ -99,4 +104,5 @@ Response(SSE, event별 부분결과):
 ─ 핵심 요약: 2 ~ 3문장 개념 설명
 ─ 예제 코드: python 블록(문법 하이라이트 + 복사 버튼)
 ─ 출처: 📘교재 · 💻코드 · 🌐웹 · ▶️영상 카드 (관련도순)
+─ 미도달: 타임아웃·실패 소스(`missing_sources`) 회색 배지
 ```

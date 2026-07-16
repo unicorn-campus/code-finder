@@ -60,6 +60,8 @@ def iter_code_files(settings: Settings) -> Iterator[FileRecord]:
             continue
         if path.name.endswith(settings.exclude_suffixes):
             continue
+        if settings.is_excluded_path(rel.as_posix()):
+            continue
         try:
             size = path.stat().st_size
         except OSError:

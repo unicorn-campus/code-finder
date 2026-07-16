@@ -1,0 +1,13 @@
+# 예제 코드 Vector DB 인덱서 의존성
+langchain-core>=0.3.0
+langchain-text-splitters>=0.3.0
+langchain-openai>=0.2.0
+langchain-chroma>=0.1.4
+chromadb>=0.5.0
+openai>=1.40.0
+tiktoken>=0.7.0
+python-dotenv>=1.0.0
+
+# 테스트
+pytest>=8.0.0
+pytest-asyncio>=0.23.0

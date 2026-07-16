@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-07-15T21:34:09+00:00",
+  "base_dir": "/Users/dreamondal/workspace/aistudy/hands-on",
+  "embedding_model": "text-embedding-3-large",
+  "chunk_size": 500,
+  "chunk_overlap": 100,
+  "files_scanned": 255,
+  "files_indexed": 255,
+  "files_unchanged": 0,
+  "files_removed": 0,
+  "files_by_lang": {
+    "python": 253,
+    "javascript": 2
+  },
+  "chunks_indexed_this_run": 2682,
+  "total_chunks": 2682,
+  "chunks_by_lang": {
+    "python": 2659,
+    "javascript": 23
+  },
+  "chunks_by_dir": {
+    "16.mas": 586,
+    "14.graphrag": 514,
+    "06.tts": 216,
+    "10.rag": 210,
+    "15.mcp": 196,
+    "13.local-llm": 178,
+    "12.web-youtube-search": 174,
+    "09.langchain": 134,
+    "05.stt": 129,
+    "08.function-call": 104,
+    "11.rag-tuning": 87,
+    "03.summary": 39,
+    "02.multiturn": 28,
+    "04.pdf": 25,
+    "explain-exam": 23,
+    "07.vlm": 18,
+    "17.jwt": 16,
+    "explain.py": 5
+  },
+  "elapsed_seconds": 162.56
+}

@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import fnmatch
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -16,12 +17,8 @@ from dotenv import load_dotenv
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ENV_PATH = PROJECT_ROOT / ".env"
 
-# 인덱스 산출물 루트: rag/store/
+# 인덱스 산출물 루트 기본값: rag/store/
 STORE_DIR = PROJECT_ROOT / "rag" / "store"
-CHROMA_DIR = STORE_DIR / "chroma"
-REPORT_PATH = STORE_DIR / "index-report.json"
-FILE_MANIFEST_PATH = STORE_DIR / "file-manifest.json"
-CHUNK_MANIFEST_PATH = STORE_DIR / "chunks-manifest.jsonl"
 
 # 언어 판별: 확장자 → 언어 라벨
 EXT_LANG = {
@@ -43,6 +40,10 @@ EXCLUDE_DIR_PARTS = {
 
 # 수집 제외 파일 접미사(빌드 산출물·압축본)
 EXCLUDE_SUFFIXES = (".min.js", ".bundle.js", ".d.ts")
+
+# 수집 제외 경로 글로브(상대경로 기준). 실행 예제 코드가 아닌 파일 제외용.
+# `explain/data.js`: 예제 설명 페이지 콘텐츠 데이터(index.html 짝) — 실행 코드 아님
+DEFAULT_EXCLUDE_GLOBS = ("explain/data.js",)
 
 # 단일 파일 최대 크기(bytes). 초과 시 스킵(미니파이·데이터 덤프 방지)
 MAX_FILE_BYTES = 400_000
@@ -70,14 +71,15 @@ class Settings:
     embed_max_retries: int = 6
     embed_base_delay: float = 1.0  # 지수 백오프 기준 지연(초)
 
-    # 저장
+    # 저장(모든 산출물 경로는 store_dir 기준으로 파생 → 설정별 격리)
     collection_name: str = "code_chunks"
-    chroma_dir: Path = CHROMA_DIR
+    store_dir: Path = STORE_DIR
 
     # 수집 대상 확장자
     include_exts: tuple[str, ...] = tuple(EXT_LANG.keys())
     exclude_dir_parts: frozenset[str] = field(default_factory=lambda: frozenset(EXCLUDE_DIR_PARTS))
     exclude_suffixes: tuple[str, ...] = EXCLUDE_SUFFIXES
+    exclude_globs: tuple[str, ...] = DEFAULT_EXCLUDE_GLOBS
     max_file_bytes: int = MAX_FILE_BYTES
 
     @classmethod
@@ -92,3 +94,34 @@ class Settings:
     def lang_for(self, suffix: str) -> str | None:
         """확장자에 대응하는 언어 라벨을 반환(미지원 시 None)."""
         return EXT_LANG.get(suffix.lower())
+
+    def is_excluded_path(self, rel_path: str) -> bool:
+        """상대경로가 제외 글로브에 해당하는지 판별함.
+
+        패턴은 경로 접미 기준으로도 매칭됨(`explain/data.js` → 임의 깊이의 동일 접미 파일).
+        """
+        for pat in self.exclude_globs:
+            if fnmatch.fnmatch(rel_path, pat) or fnmatch.fnmatch(rel_path, f"*/{pat}"):
+                return True
+        return False
+
+    # --- store_dir 기준 산출물 경로(설정별 격리 보장) ---
+    @property
+    def chroma_dir(self) -> Path:
+        return self.store_dir / "chroma"
+
+    @property
+    def report_path(self) -> Path:
+        return self.store_dir / "index-report.json"
+
+    @property
+    def dryrun_report_path(self) -> Path:
+        return self.store_dir / "dryrun-report.json"
+
+    @property
+    def file_manifest_path(self) -> Path:
+        return self.store_dir / "file-manifest.json"
+
+    @property
+    def chunk_manifest_path(self) -> Path:
+        return self.store_dir / "chunks-manifest.jsonl"

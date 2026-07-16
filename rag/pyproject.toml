@@ -1,0 +1,10 @@
+[tool.pytest.ini_options]
+# rag/ 를 import 루트로 사용(`import indexer`)
+pythonpath = ["."]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+# 실제 OpenAI/Chroma 원격 호출 테스트는 integration 마커로 분리(기본 실행에서 제외)
+addopts = "-m 'not integration'"
+markers = [
+    "integration: 실제 외부 API(OpenAI) 호출이 필요한 통합 테스트",
+]

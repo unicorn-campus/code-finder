@@ -18,6 +18,9 @@ from langchain_openai import OpenAIEmbeddings
 from .chunker import Chunk
 from .config import Settings
 
+# Chroma 컬렉션 단일 upsert 최대 배치(내부 상한 5461 미만으로 분할)
+MAX_UPSERT_BATCH = 5000
+
 
 def now_iso() -> str:
     """UTC ISO-8601(초 단위) 타임스탬프를 반환함."""
@@ -56,15 +59,20 @@ class CodeVectorStore:
         return self.vs._collection.count()
 
     def upsert(self, chunks: list[Chunk], embeddings: list[list[float]], indexed_at: str) -> None:
-        """청크·임베딩·메타데이터를 컬렉션에 upsert함."""
+        """청크·임베딩·메타데이터를 컬렉션에 upsert함(Chroma 최대 배치 제한 대응 분할)."""
         if not chunks:
             return
         ids = [c.chunk_id() for c in chunks]
         documents = [c.text for c in chunks]
         metadatas = [build_metadata(c, indexed_at) for c in chunks]
-        self.vs._collection.upsert(
-            ids=ids, embeddings=embeddings, documents=documents, metadatas=metadatas
-        )
+        step = MAX_UPSERT_BATCH
+        for i in range(0, len(ids), step):
+            self.vs._collection.upsert(
+                ids=ids[i : i + step],
+                embeddings=embeddings[i : i + step],
+                documents=documents[i : i + step],
+                metadatas=metadatas[i : i + step],
+            )
 
     def delete_ids(self, ids: Iterable[str]) -> None:
         """지정 ID의 청크를 컬렉션에서 삭제함."""
@@ -83,31 +91,21 @@ class CodeVectorStore:
         """쿼리 임베딩 기반 유사도 검색 상위 k건을 반환함."""
         return self.vs.similarity_search(query, k=k)
 
+    def all_metadatas(self) -> list[dict]:
+        """컬렉션 전체 메타데이터를 조회함(리포트·매니페스트 산출용)."""
+        got = self.vs._collection.get(include=["metadatas"])
+        return got.get("metadatas", []) or []
+
     # --- 파일 매니페스트(증분 인덱싱) ---
     def load_manifest(self) -> dict:
         """파일 매니페스트를 로드함(없으면 빈 dict)."""
-        p: Path = self.settings_manifest_path
+        p: Path = self.settings.file_manifest_path
         if p.exists():
             return json.loads(p.read_text(encoding="utf-8"))
         return {}
 
     def save_manifest(self, manifest: dict) -> None:
         """파일 매니페스트를 저장함."""
-        p: Path = self.settings_manifest_path
+        p: Path = self.settings.file_manifest_path
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    @property
-    def settings_manifest_path(self) -> Path:
-        from .config import FILE_MANIFEST_PATH
-
-        return FILE_MANIFEST_PATH
-
-
-def write_chunk_manifest(path: Path, chunks: list[Chunk], indexed_at: str) -> None:
-    """testset-rag 대조용 청크 매니페스트(JSONL)를 기록함."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        for c in chunks:
-            rec = build_metadata(c, indexed_at)
-            f.write(json.dumps(rec, ensure_ascii=False) + "\n")

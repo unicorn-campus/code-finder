@@ -1,0 +1,52 @@
+/**
+ * 글로벌 스타일 — 미니멀 리셋 + 기본 타이포그래피.
+ */
+
+:root {
+  --sans: system-ui, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+  --mono: ui-monospace, 'Menlo', 'Monaco', 'Consolas', monospace;
+
+  font: 16px/1.5 var(--sans);
+  color: #202124;
+  background: #fff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+}
+
+a {
+  color: #1a73e8;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+}
+
+code, pre {
+  font-family: var(--mono);
+}
+
+/* 포커스 가시성 */
+:focus-visible {
+  outline: 2px solid #4285f4;
+  outline-offset: 2px;
+}

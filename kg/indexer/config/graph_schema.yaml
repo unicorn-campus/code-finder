@@ -1,0 +1,35 @@
+# 교재 GraphRAG 엔티티/관계 타입 스키마
+# - 본 파일은 인덱서가 추출 범위(allowed_nodes/allowed_relationships)를 로드하는 단일 출처임
+# - 코드에 타입을 하드코딩하지 않음. 타입 변경 시 본 파일만 편집하면 인덱서 재실행에 반영됨
+# - 확정: 사용자 검토 승인 (노드 5종 + 관계 5종)
+# - 근거: 교재 도메인 + 용어집(957개) 카테고리 분포 + 스파이크 추출 검증
+
+# 엔티티(노드) 타입 5종
+allowed_nodes:
+  - Concept       # 개념 (예: Embedding, Multi-hop, Knowledge Graph, Community Detection)
+  - Technique     # 기법 (예: ReAct, Chain-of-Thought, HyDE, Re-ranking, GraphRAG)
+  - Tool          # 도구/라이브러리 (예: Neo4j, Chroma, BM25, Cypher, APOC)
+  - Model         # 모델 (예: gpt-oss-120b, text-embedding-3-large, Claude Sonnet)
+  - Framework     # 프레임워크 (예: LangChain, LangGraph, MS GraphRAG, LlamaIndex)
+
+# 관계 타입 5종: EXTENDS(확장)·USES(사용)·PREREQUISITE_OF(선행)·PART_OF(구성요소)·ALTERNATIVE_TO(대안)
+# 각 항목은 [출발노드타입, 관계타입, 도착노드타입] 3-튜플로 추출 정밀도를 제한함
+allowed_relationships:
+  - [Technique, EXTENDS, Technique]        # 예: ReAct EXTENDS Chain-of-Thought
+  - [Framework, EXTENDS, Framework]
+  - [Concept, PREREQUISITE_OF, Concept]    # 예: Embedding PREREQUISITE_OF RAG
+  - [Concept, PREREQUISITE_OF, Technique]
+  - [Technique, USES, Tool]                # 예: GraphRAG USES Neo4j
+  - [Technique, USES, Framework]
+  - [Framework, USES, Tool]
+  - [Model, USES, Tool]
+  - [Concept, PART_OF, Framework]          # 예: StateGraph PART_OF LangGraph
+  - [Concept, PART_OF, Concept]
+  - [Tool, PART_OF, Framework]
+  - [Framework, ALTERNATIVE_TO, Framework] # 예: MS GraphRAG ALTERNATIVE_TO LightRAG
+  - [Technique, ALTERNATIVE_TO, Technique]
+  - [Tool, ALTERNATIVE_TO, Tool]
+
+# 엔티티 노드에 함께 추출할 속성 (임베딩·요약 품질 향상용)
+node_properties:
+  - description

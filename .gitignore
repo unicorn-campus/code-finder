@@ -8,3 +8,15 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Vector store 영속 데이터(빌드 산출물, 재생성 가능)
+rag/store/chroma/
+.pytest_cache/
+
+# GraphRAG 인덱서 체크포인트(로컬 SqliteSaver, 재생성 가능)
+kg/indexer/checkpoints/
+
+# 검색 API 체크포인트·수집 캐시·평가 중간 샘플(로컬, 재생성 가능)
+app/checkpoints/
+crawler/.cache/
+datasets/eval-samples.jsonl

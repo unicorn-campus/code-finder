@@ -1,0 +1,80 @@
+{
+  "generated_at": "2026-07-15T23:05:47+00:00",
+  "eval_version": "1.0",
+  "judge_model": "gpt-4o-mini",
+  "embedding_model": "text-embedding-3-large",
+  "top_k": 10,
+  "context_k": 8,
+  "datasets": {
+    "rag": {
+      "dataset": "rag",
+      "n": 34,
+      "ragas": {
+        "metrics": {
+          "context_recall": 0.9193548387096774,
+          "llm_context_precision_with_reference": 0.709069127634371,
+          "faithfulness": 0.9357843137254903,
+          "answer_relevancy": 0.5512579782514435
+        },
+        "n": 34
+      },
+      "ndcg": {
+        "mean_ndcg": 0.32461122302376616,
+        "n_with_gt": 29
+      },
+      "ndcg_by_type": {
+        "NL2CODE": {
+          "mean_ndcg": 0.18070123938874294,
+          "n": 8
+        },
+        "API_USAGE": {
+          "mean_ndcg": 0.18319025715305073,
+          "n": 9
+        },
+        "CODE2CODE": {
+          "mean_ndcg": 0.574066089715574,
+          "n": 6
+        },
+        "HYBRID": {
+          "mean_ndcg": 0.47916778331806226,
+          "n": 6
+        }
+      }
+    },
+    "graphrag": {
+      "dataset": "graphrag",
+      "n": 37,
+      "ragas": {
+        "metrics": {
+          "context_recall": 0.9375,
+          "llm_context_precision_with_reference": 0.7662819451977798,
+          "faithfulness": 0.8612612612612612,
+          "answer_relevancy": 0.5604971511700457
+        },
+        "n": 37
+      },
+      "ndcg": {
+        "mean_ndcg": 0.1799244434920503,
+        "n_with_gt": 32
+      },
+      "ndcg_by_type": {
+        "FACTOID": {
+          "mean_ndcg": 0.11665660342686418,
+          "n": 9
+        },
+        "RELATIONAL": {
+          "mean_ndcg": 0.23598824727741718,
+          "n": 9
+        },
+        "MULTI_HOP": {
+          "mean_ndcg": 0.19797231692588468,
+          "n": 8
+        },
+        "EXPLORATORY": {
+          "mean_ndcg": 0.16666666666666666,
+          "n": 6
+        }
+      }
+    }
+  }
+}

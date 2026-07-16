@@ -1,0 +1,72 @@
+# 교재 GraphRAG 인덱서 의존성 (Python 3.12+ 검증: 3.13.13)
+# 설치: pip install -r requirements.txt
+
+# --- LangChain / LangGraph 코어 ---
+langchain==1.3.13
+langchain-core==1.4.9
+langchain-text-splitters==1.1.2
+langchain-community==0.4.2
+langchain-experimental==0.4.2          # LLMGraphTransformer (엔티티·관계 추출)
+langgraph==1.2.9                        # 파이프라인 오케스트레이션(StateGraph)
+langgraph-checkpoint-sqlite==3.1.0      # SqliteSaver(중단 복구·재개)
+
+# --- LLM / 임베딩 ---
+langchain-groq==1.1.3                   # Groq LPU (gpt-oss-120b)
+langchain-openai==1.3.5                 # OpenAI 임베딩(text-embedding-3-large)
+
+# --- 그래프 저장소 ---
+langchain-neo4j==0.10.0                 # Neo4jGraph / Neo4jVector
+neo4j==6.2.0                            # Neo4j 파이썬 드라이버
+
+# --- 커뮤니티 탐지 (GDS 부재 → Python측 Louvain) ---
+networkx==3.6.1
+
+# --- 설정 / 유틸 ---
+python-dotenv==1.2.2
+pydantic==2.13.4
+PyYAML==6.0.3
+
+# --- 테스트 ---
+pytest==9.1.1
+pytest-asyncio==1.4.0
+pytest-mock==3.15.1
+
+# ====================================================================== #
+# 통합 검색 백엔드 API 서비스 (app/, rag/retriever, kg/retriever, crawler/)
+# ====================================================================== #
+
+# --- API 서버 / SSE 스트리밍 ---
+fastapi==0.139.0
+uvicorn[standard]==0.51.0
+sse-starlette==3.4.5
+
+# --- 멀티 LLM (Claude / Gemini; Groq·OpenAI는 상단 인덱서 의존성 재사용) ---
+langchain-anthropic==1.4.8              # Claude Sonnet (코드 합성)
+langchain-google-genai==4.2.7          # Gemini (요약·다국어 대안)
+
+# --- 코드 Vector 리트리버 (Chroma + 하이브리드) ---
+chromadb==1.5.9
+langchain-chroma==1.1.0
+langchain-classic==1.0.8               # EnsembleRetriever / ContextualCompressionRetriever
+rank-bm25==0.2.2                        # BM25 키워드 검색
+
+# --- Post 리랭킹 ---
+langchain-cohere==0.6.0
+cohere==5.21.1                          # Cohere rerank(rerank-multilingual-v3.0)
+
+# --- 웹 / 유튜브 수집 ---
+ddgs==9.14.4                            # DuckDuckGo 검색(구 duckduckgo-search 후속)
+beautifulsoup4==4.15.0
+lxml==6.1.1
+requests==2.34.2
+youtube-transcript-api==1.2.4          # 유튜브 자막 로드
+google-api-python-client==2.198.0      # YouTube Data API v3
+
+# --- 검색 품질 평가 (§3.7) ---
+ragas==0.4.3                            # RAGAS 지표(Context Recall·Precision·Faithfulness·Answer Relevancy)
+datasets==5.0.0                         # ragas 의존
+# 주: ragas 0.4.x는 langchain_community.chat_models.vertexai를 하드 import함.
+#     langchain-community 0.4.x에서 제거되어 app/eval/ragas_compat.py의 shim으로 보정함(VertexAI 미사용).
+
+# --- 비동기 체크포인트 저장소(SqliteSaver 비동기) ---
+aiosqlite==0.22.1

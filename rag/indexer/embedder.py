@@ -15,6 +15,19 @@ from langchain_openai import OpenAIEmbeddings
 
 from .config import Settings
 
+# 재시도해도 회복 불가한 오류(인증·권한·잘못된 요청)는 즉시 전파함
+try:  # openai 미설치 환경(순수 단위테스트)에서도 임포트 실패하지 않도록 방어
+    from openai import (
+        AuthenticationError,
+        BadRequestError,
+        NotFoundError,
+        PermissionDeniedError,
+    )
+
+    NON_RETRYABLE = (AuthenticationError, PermissionDeniedError, BadRequestError, NotFoundError)
+except Exception:  # noqa: BLE001
+    NON_RETRYABLE = ()
+
 
 def make_embeddings(settings: Settings) -> OpenAIEmbeddings:
     """설정 기반 OpenAIEmbeddings 인스턴스를 생성함."""
@@ -38,7 +51,9 @@ async def _embed_one_batch(
     while True:
         try:
             return await embeddings.aembed_documents(batch)
-        except Exception:  # noqa: BLE001 - 재시도 상한까지 광범위 포착
+        except NON_RETRYABLE:
+            raise  # 인증·권한·요청 오류는 재시도 무의미 → 즉시 전파
+        except Exception:  # noqa: BLE001 - 그 외(429·타임아웃·5xx)는 재시도
             attempt += 1
             if attempt > settings.embed_max_retries:
                 raise
